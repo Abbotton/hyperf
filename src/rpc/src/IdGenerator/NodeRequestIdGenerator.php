@@ -9,11 +9,12 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Rpc\IdGenerator;
 
 use DateTime;
+use Hyperf\Codec\Base62;
 use Hyperf\Contract\IdGeneratorInterface;
-use Hyperf\Utils\Codec\Base62;
 
 class NodeRequestIdGenerator implements IdGeneratorInterface
 {

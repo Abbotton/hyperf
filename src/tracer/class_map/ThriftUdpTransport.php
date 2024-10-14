@@ -9,14 +9,15 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Jaeger;
 
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Engine\Channel;
-use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Coroutine;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Socket;
@@ -51,7 +52,7 @@ class ThriftUdpTransport extends TTransport
      */
     private $chan;
 
-    public function __construct(string $host, int $port, LoggerInterface $logger = null)
+    public function __construct(string $host, int $port, ?LoggerInterface $logger = null)
     {
         $this->host = $host;
         $this->port = $port;

@@ -151,23 +151,23 @@ $config->get($key，$default);
 `#[Value]` 内的字符串则对应到 `$config->get($key)` 内的 `$key` 参数，在创建该对象实例时，对应的配置会自动注入到定义的类属性中。
 
 ```php
+use Hyperf\Config\Annotation\Value;
+
 class IndexController
 {
-    
     #[Value("config.key")]
     private $configValue;
-    
+
     public function index()
     {
         return $this->configValue;
     }
-    
 }
 ```
 
 #### 通过 config 函数获取
 
-在任意地方可以通过 `config(string $key, $default)` 函数获取对应的配置，但这样的使用方式也就意味着您对 [hyperf/config](https://github.com/hyperf/config) 和 [hyperf/utils](https://github.com/hyperf/utils) 组件是强依赖的。
+在任意地方可以通过 `config(string $key, $default)` 函数获取对应的配置，但这样的使用方式也就意味着您对 [hyperf/config](https://github.com/hyperf/config) 和 [hyperf/support](https://github.com/hyperf/support) 组件是强依赖的。
 
 ### 判断配置是否存在
 

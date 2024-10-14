@@ -9,12 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Server;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\MiddlewareInitializerInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
+use Hyperf\Coroutine\Waiter;
 use Hyperf\Engine\Http\Server as HttpServer;
 use Hyperf\Engine\Server as BaseServer;
 use Hyperf\Server\Event\AllCoroutineServersClosed;
@@ -22,13 +24,13 @@ use Hyperf\Server\Event\CoroutineServerStart;
 use Hyperf\Server\Event\CoroutineServerStop;
 use Hyperf\Server\Event\MainCoroutineServerStart;
 use Hyperf\Server\Exception\RuntimeException;
-use Hyperf\Utils\Str;
-use Hyperf\Utils\Waiter;
+use Hyperf\Stringable\Str;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Swow\Buffer;
 use Swow\Coroutine;
+use Swow\Psr7\Psr7;
 use Swow\Socket;
 
 use function Swow\Sync\waitAll;
@@ -116,6 +118,7 @@ class SwowServer implements ServerInterface
             $host = $server->getHost();
             $port = $server->getPort();
             $callbacks = array_replace($config->getCallbacks(), $server->getCallbacks());
+            $server->setSettings(array_replace($config->getSettings(), $server->getSettings()));
 
             $this->server = $this->makeServer($type, $host, $port, $server->getSettings());
 
@@ -144,13 +147,29 @@ class SwowServer implements ServerInterface
                 }
                 return;
             case ServerInterface::SERVER_WEBSOCKET:
+                $httpHandler = null;
+                $httpMethod = null;
+                if (isset($callbacks[Event::ON_REQUEST])) {
+                    [$httpHandler, $httpMethod] = $this->getCallbackMethod(Event::ON_REQUEST, $callbacks);
+                    if ($httpHandler instanceof MiddlewareInitializerInterface) {
+                        $httpHandler->initCoreMiddleware($name);
+                    }
+                }
+
                 if (isset($callbacks[Event::ON_HAND_SHAKE])) {
                     [$handler, $method] = $this->getCallbackMethod(Event::ON_HAND_SHAKE, $callbacks);
                     if ($handler instanceof MiddlewareInitializerInterface) {
                         $handler->initCoreMiddleware($name);
                     }
-                    if ($this->server instanceof HttpServer) {
-                        $server->handle(function ($request, $session) use ($handler, $method) {
+                    if ($server instanceof HttpServer) {
+                        $server->handle(function ($request, $session) use ($handler, $method, $httpHandler, $httpMethod) {
+                            $upgradeType = Psr7::detectUpgradeType($request);
+                            if (! $upgradeType && $httpHandler && $httpMethod) {
+                                $this->waiter->wait(static function () use ($request, $session, $httpHandler, $httpMethod) {
+                                    $httpHandler->{$httpMethod}($request, $session);
+                                });
+                                return;
+                            }
                             $this->waiter->wait(static function () use ($request, $session, $handler, $method) {
                                 $handler->{$method}($request, $session);
                             });
@@ -166,8 +185,8 @@ class SwowServer implements ServerInterface
                     if ($receiveHandler instanceof MiddlewareInitializerInterface) {
                         $receiveHandler->initCoreMiddleware($name);
                     }
-                    if ($this->server instanceof BaseServer) {
-                        $this->server->handle(function (Socket $connection) use ($connectHandler, $connectMethod, $receiveHandler, $receiveMethod, $closeHandler, $closeMethod) {
+                    if ($server instanceof BaseServer) {
+                        $server->handle(function (Socket $connection) use ($connectHandler, $connectMethod, $receiveHandler, $receiveMethod, $closeHandler, $closeMethod) {
                             if ($connectHandler && $connectMethod) {
                                 $this->waiter->wait(static function () use ($connectHandler, $connectMethod, $connection) {
                                     $connectHandler->{$connectMethod}($connection, $connection->getId());
@@ -190,6 +209,14 @@ class SwowServer implements ServerInterface
                                 });
                             }
                         });
+                    }
+                    if (isset($callbacks[Event::ON_PACKET])) {
+                        [$receiveHandler, $receiveMethod] = $this->getCallbackMethod(Event::ON_PACKET, $callbacks);
+                        if ($server instanceof BaseServer) {
+                            $server->handle(function (Socket $connection, $data, $clientInfo) use ($receiveHandler, $receiveMethod) {
+                                $receiveHandler->{$receiveMethod}($connection, $data, $clientInfo);
+                            });
+                        }
                     }
                 }
                 return;

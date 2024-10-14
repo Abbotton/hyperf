@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\JsonRpc;
 
 use GuzzleHttp\Client;
@@ -18,6 +19,8 @@ use Hyperf\LoadBalancer\LoadBalancerInterface;
 use Hyperf\LoadBalancer\Node;
 use Hyperf\Rpc\Contract\TransporterInterface;
 use RuntimeException;
+
+use function Hyperf\Support\value;
 
 class JsonRpcHttpTransporter implements TransporterInterface
 {
@@ -74,7 +77,6 @@ class JsonRpcHttpTransporter implements TransporterInterface
         if ($response->getStatusCode() === 200) {
             return (string) $response->getBody();
         }
-        $this->loadBalancer->removeNode($node);
 
         return '';
     }

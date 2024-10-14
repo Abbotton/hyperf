@@ -9,16 +9,19 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\GrpcClient;
 
 use Google\Protobuf\Internal\Message;
+use Hyperf\Context\ApplicationContext;
+use Hyperf\Coroutine\Channel\Pool as ChannelPool;
 use Hyperf\Grpc\Parser;
 use Hyperf\Grpc\StatusCode;
 use Hyperf\GrpcClient\Exception\GrpcClientException;
-use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\ChannelPool;
 use InvalidArgumentException;
 use Swoole\Http2\Response;
+
+use function Hyperf\Support\retry;
 
 /**
  * @method int send(Request $request)
@@ -40,15 +43,6 @@ class BaseClient
         $this->grpcClient?->close(false);
     }
 
-    /**
-     * @deprecated
-     * @param string $name
-     */
-    public function __get($name)
-    {
-        return $this->_getGrpcClient()->{$name};
-    }
-
     public function __call($name, $arguments)
     {
         return $this->_getGrpcClient()->{$name}(...$arguments);
@@ -59,6 +53,7 @@ class BaseClient
         if (! $this->initialized) {
             $this->init();
         }
+        $this->start();
         return $this->grpcClient;
     }
 
@@ -166,7 +161,15 @@ class BaseClient
     private function start()
     {
         $client = $this->grpcClient;
-        return $client->isRunning() || $client->start();
+        if (! ($client->isRunning() || $client->start())) {
+            $message = sprintf(
+                'Grpc client start failed with error code %d when connect to %s',
+                $client->getErrCode(),
+                $this->hostname
+            );
+            throw new GrpcClientException($message, StatusCode::INTERNAL);
+        }
+        return true;
     }
 
     private function init()
@@ -179,14 +182,6 @@ class BaseClient
         } else {
             $this->grpcClient = new GrpcClient(ApplicationContext::getContainer()->get(ChannelPool::class));
             $this->grpcClient->set($this->hostname, $this->options);
-        }
-        if (! $this->start()) {
-            $message = sprintf(
-                'Grpc client start failed with error code %d when connect to %s',
-                $this->grpcClient->getErrCode(),
-                $this->hostname
-            );
-            throw new GrpcClientException($message, StatusCode::INTERNAL);
         }
 
         $this->initialized = true;

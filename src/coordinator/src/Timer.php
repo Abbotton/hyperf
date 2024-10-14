@@ -9,11 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Coordinator;
 
-use Closure;
-use Hyperf\Contract\StdoutLoggerInterface;
+use Psr\Log\LoggerInterface;
 use Throwable;
+
+use function Hyperf\Coroutine\go;
 
 class Timer
 {
@@ -27,18 +29,22 @@ class Timer
 
     private static int $round = 0;
 
-    public function __construct(private ?StdoutLoggerInterface $logger = null)
+    public function __construct(private ?LoggerInterface $logger = null)
     {
     }
 
-    public function after(float $timeout, Closure $closure, string $identifier = Constants::WORKER_EXIT): int
+    public function after(float $timeout, callable $closure, string $identifier = Constants::WORKER_EXIT): int
     {
         $id = ++$this->id;
         $this->closures[$id] = true;
         go(function () use ($timeout, $closure, $identifier, $id) {
             try {
                 ++Timer::$count;
-                $isClosing = CoordinatorManager::until($identifier)->yield($timeout);
+                $isClosing = match (true) {
+                    $timeout > 0 => CoordinatorManager::until($identifier)->yield($timeout), // Run after $timeout seconds.
+                    $timeout == 0 => CoordinatorManager::until($identifier)->isClosing(), // Run immediately.
+                    default => CoordinatorManager::until($identifier)->yield(), // Run until $identifier resume.
+                };
                 if (isset($this->closures[$id])) {
                     $closure($isClosing);
                 }
@@ -50,7 +56,7 @@ class Timer
         return $id;
     }
 
-    public function tick(float $timeout, Closure $closure, string $identifier = Constants::WORKER_EXIT): int
+    public function tick(float $timeout, callable $closure, string $identifier = Constants::WORKER_EXIT): int
     {
         $id = ++$this->id;
         $this->closures[$id] = true;
@@ -59,7 +65,7 @@ class Timer
                 $round = 0;
                 ++Timer::$count;
                 while (true) {
-                    $isClosing = CoordinatorManager::until($identifier)->yield($timeout);
+                    $isClosing = CoordinatorManager::until($identifier)->yield(max($timeout, 0.000001));
                     if (! isset($this->closures[$id])) {
                         break;
                     }
@@ -86,6 +92,11 @@ class Timer
             }
         });
         return $id;
+    }
+
+    public function until(callable $closure, string $identifier = Constants::WORKER_EXIT): int
+    {
+        return $this->after(-1, $closure, $identifier);
     }
 
     public function clear(int $id): void

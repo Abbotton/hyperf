@@ -9,17 +9,19 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Swagger;
 
+use Hyperf\Codec\Json;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\OnRequestInterface;
 use Hyperf\Engine\Http\Stream;
 use Hyperf\HttpMessage\Server\Request as Psr7Request;
 use Hyperf\HttpMessage\Server\Response;
 use Hyperf\HttpServer\ResponseEmitter;
-use Hyperf\Utils\Codec\Json;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 
 class HttpServer implements OnRequestInterface
 {
@@ -44,22 +46,33 @@ class HttpServer implements OnRequestInterface
 
     public function onRequest($request, $response): void
     {
-        if ($request instanceof ServerRequestInterface) {
-            $psr7Request = $request;
-        } else {
-            $psr7Request = Psr7Request::loadFromSwooleRequest($request);
+        try {
+            if ($request instanceof ServerRequestInterface) {
+                $psr7Request = $request;
+            } else {
+                $psr7Request = Psr7Request::loadFromSwooleRequest($request);
+            }
+
+            $path = $psr7Request->getUri()->getPath();
+            if ($path === $this->config['url']) {
+                $stream = new Stream($this->getHtml());
+                $contentType = 'text/html;charset=utf-8';
+            } else {
+                $stream = new Stream($this->getMetadata($path));
+                $contentType = 'application/json;charset=utf-8';
+            }
+
+            $psrResponse = (new Response())->setBody($stream)->setHeader('content-type', $contentType);
+
+            $this->emitter->emit($psrResponse, $response);
+        } catch (Throwable) {
+            $this->emitter->emit(
+                (new Response())
+                    ->setBody(new Stream('Server Error'))
+                    ->setHeader('content-type', 'text/html;charset=utf-8'),
+                $response
+            );
         }
-
-        $path = $psr7Request->getUri()->getPath();
-        if ($path === $this->config['url']) {
-            $stream = new Stream($this->getHtml());
-        } else {
-            $stream = new Stream($this->getMetadata($path));
-        }
-
-        $psrResponse = (new Response())->withBody($stream);
-
-        $this->emitter->emit($psrResponse, $response);
     }
 
     protected function getMetadata(string $path): string
@@ -70,7 +83,7 @@ class HttpServer implements OnRequestInterface
             return $this->metadata[$id];
         }
 
-        if (file_exists($path)) {
+        if (is_file($path) && file_exists($path)) {
             $metadata = file_get_contents($path);
         } else {
             $metadata = Json::encode([
@@ -98,16 +111,16 @@ class HttpServer implements OnRequestInterface
       content="SwaggerUI"
     />
     <title>SwaggerUI</title>
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
+    <link rel="stylesheet" href="https://unpkg.hyperf.wiki/swagger-ui-dist@4.5.0/swagger-ui.css" />
   </head>
   <body>
   <div id="swagger-ui"></div>
-  <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
-  <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js" crossorigin></script>
+  <script src="https://unpkg.hyperf.wiki/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
+  <script src="https://unpkg.hyperf.wiki/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js" crossorigin></script>
   <script>
     window.onload = () => {
       window.ui = SwaggerUIBundle({
-        url: '/http.json',
+        url: GetQueryString("search"),
         dom_id: '#swagger-ui',
         presets: [
           SwaggerUIBundle.presets.apis,
@@ -116,6 +129,16 @@ class HttpServer implements OnRequestInterface
         layout: "StandaloneLayout",
       });
     };
+    function GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+      var r = window.location.search.substr(1).match(reg); //获取url中"?"符后的字符串并正则匹配
+      var context = "";
+      if (r != null)
+        context = decodeURIComponent(r[2]);
+      reg = null;
+      r = null;
+      return context == null || context == "" || context == "undefined" ? "/http.json" : context;
+    }
   </script>
   </body>
 </html>

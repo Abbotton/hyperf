@@ -75,7 +75,7 @@ use Hyperf\DbConnection\Model\Model;
 class User extends Model
 {
     /**
-     * 设置用户的姓名.
+     * Set the user's name.
      *
      * @param  string  $value
      * @return void
@@ -372,7 +372,7 @@ declare(strict_types=1);
 namespace App\Caster;
 
 use Hyperf\Contract\CastsAttributes;
-use Hyperf\Utils\Arr;
+use Hyperf\Collection\Arr;
 
 class UserInfoCaster implements CastsAttributes
 {

@@ -106,12 +106,11 @@ class RateLimitController
 
 declare(strict_types=1);
 
-
 namespace App\Controller;
 
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\RateLimit\Annotation\RateLimit;
-use Hyperf\Utils\ApplicationContext;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
 class TestController
@@ -119,9 +118,8 @@ class TestController
     /**
      * @RateLimit(create=1, capacity=3, key={TestController::class, "getUserId"})
      */
-    public function test(TestRequest $request)
+    public function test()
     {
-
         return ["QPS 1, 峯值3"];
     }
 
@@ -131,7 +129,5 @@ class TestController
         // 同理可以根據手機號、IP地址等不同緯度進行限流
         return $request->input('user_id');
     }
-
 }
-
 ```

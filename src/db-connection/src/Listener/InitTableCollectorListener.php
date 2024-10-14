@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\DbConnection\Listener;
 
 use Hyperf\Command\Event\BeforeHandle;
@@ -20,6 +21,7 @@ use Hyperf\DbConnection\Collector\TableCollector;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\AfterWorkerStart;
 use Hyperf\Process\Event\BeforeProcessHandle;
+use Hyperf\Server\Event\MainCoroutineServerStart;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -45,6 +47,7 @@ class InitTableCollectorListener implements ListenerInterface
             BeforeHandle::class,
             AfterWorkerStart::class,
             BeforeProcessHandle::class,
+            MainCoroutineServerStart::class,
         ];
     }
 

@@ -9,12 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Cache\Driver;
 
 use Hyperf\Cache\Exception\InvalidArgumentException;
+use Hyperf\Codec\Packer\PhpSerializerPacker;
 use Hyperf\Contract\PackerInterface;
-use Hyperf\Utils\InteractsWithTime;
-use Hyperf\Utils\Packer\PhpSerializerPacker;
+use Hyperf\Support\Traits\InteractsWithTime;
 use Psr\Container\ContainerInterface;
 
 abstract class Driver implements DriverInterface

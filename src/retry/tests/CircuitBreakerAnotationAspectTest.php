@@ -9,8 +9,10 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\Retry;
 
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Di\Aop\AnnotationMetadata;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\Di\Container;
@@ -20,9 +22,9 @@ use Hyperf\Retry\Annotation\CircuitBreaker;
 use Hyperf\Retry\Aspect\RetryAnnotationAspect;
 use Hyperf\Retry\CircuitBreakerState;
 use Hyperf\Retry\FlatStrategy;
-use Hyperf\Utils\ApplicationContext;
 use HyperfTest\Retry\Stub\Foo;
 use Mockery;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -30,6 +32,7 @@ use RuntimeException;
  * @internal
  * @coversNothing
  */
+#[CoversNothing]
 class CircuitBreakerAnotationAspectTest extends TestCase
 {
     protected function setUp(): void
@@ -50,7 +53,7 @@ class CircuitBreakerAnotationAspectTest extends TestCase
         $point = Mockery::mock(ProceedingJoinPoint::class);
 
         $point->shouldReceive('getAnnotationMetadata')->andReturns(
-            new class() extends AnnotationMetadata {
+            new class extends AnnotationMetadata {
                 public array $method;
 
                 public function __construct()
@@ -81,7 +84,7 @@ class CircuitBreakerAnotationAspectTest extends TestCase
         $point = Mockery::mock(ProceedingJoinPoint::class);
 
         $point->shouldReceive('getAnnotationMetadata')->andReturns(
-            new class() extends AnnotationMetadata {
+            new class extends AnnotationMetadata {
                 public array $method;
 
                 public function __construct()
@@ -109,7 +112,7 @@ class CircuitBreakerAnotationAspectTest extends TestCase
         $point = Mockery::mock(ProceedingJoinPoint::class);
 
         $point->shouldReceive('getAnnotationMetadata')->andReturns(
-            new class() extends AnnotationMetadata {
+            new class extends AnnotationMetadata {
                 public array $method;
 
                 public function __construct()

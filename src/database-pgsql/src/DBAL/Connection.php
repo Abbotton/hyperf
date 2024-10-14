@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\PgSQL\DBAL;
 
 use Doctrine\DBAL\Driver\Result as ResultInterface;
@@ -16,6 +17,8 @@ use Doctrine\DBAL\Driver\Statement as StatementInterface;
 use Doctrine\DBAL\ParameterType;
 use Swoole\Coroutine\PostgreSQL;
 use Swoole\Coroutine\PostgreSQLStatement;
+
+use function assert;
 
 class Connection implements \Doctrine\DBAL\Driver\Connection
 {
@@ -33,7 +36,7 @@ class Connection implements \Doctrine\DBAL\Driver\Connection
     {
         $stmt = $this->connection->query($sql);
 
-        \assert($stmt instanceof PostgreSQLStatement);
+        assert($stmt instanceof PostgreSQLStatement);
 
         return $stmt->affectedRows();
     }
@@ -45,7 +48,7 @@ class Connection implements \Doctrine\DBAL\Driver\Connection
     {
         $stmt = $this->connection->prepare($sql);
 
-        \assert($stmt instanceof PostgreSQLStatement);
+        assert($stmt instanceof PostgreSQLStatement);
 
         return new Statement($stmt);
     }
@@ -57,7 +60,7 @@ class Connection implements \Doctrine\DBAL\Driver\Connection
     {
         $stmt = $this->connection->query($sql);
 
-        \assert($stmt instanceof PostgreSQLStatement);
+        assert($stmt instanceof PostgreSQLStatement);
 
         return new Result($stmt);
     }

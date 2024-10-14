@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\DbConnection;
 
 use Hyperf\Contract\ConnectionInterface;
@@ -98,9 +99,6 @@ class Connection extends BaseConnection implements ConnectionInterface, DbConnec
         return true;
     }
 
-    /**
-     * @deprecated This method will be removed in v3.1, please use `$this->transactionLevel() > 0`.
-     */
     public function isTransaction(): bool
     {
         return $this->transactionLevel() > 0;
@@ -112,17 +110,24 @@ class Connection extends BaseConnection implements ConnectionInterface, DbConnec
             if ($this->connection instanceof \Hyperf\Database\Connection) {
                 // Reset $recordsModified property of connection to false before the connection release into the pool.
                 $this->connection->resetRecordsModified();
+                if ($this->connection->getErrorCount() > 100) {
+                    // If the error count of connection is more than 100, we think it is a bad connection,
+                    // So we'll reset it at the next time
+                    $this->lastUseTime = 0.0;
+                }
             }
 
             if ($this->transactionLevel() > 0) {
                 $this->rollBack(0);
                 $this->logger->error('Maybe you\'ve forgotten to commit or rollback the MySQL transaction.');
             }
-
-            parent::release();
         } catch (Throwable $exception) {
-            $this->logger->critical('Release connection failed, caused by ' . $exception);
+            $this->logger->error('Rollback connection failed, caused by ' . $exception);
+            // Ensure that the connection must be reset the next time after broken.
+            $this->lastUseTime = 0.0;
         }
+
+        parent::release();
     }
 
     /**

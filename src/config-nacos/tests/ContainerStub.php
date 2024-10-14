@@ -9,17 +9,18 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\ConfigNacos;
 
 use Hyperf\ConfigNacos\Client;
 use Hyperf\ConfigNacos\Constants;
 use Hyperf\ConfigNacos\NacosClient;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\IPReaderInterface;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Nacos\Application;
 use Hyperf\Nacos\Config;
-use Hyperf\Utils\ApplicationContext;
 use Mockery;
 use Psr\Container\ContainerInterface;
 

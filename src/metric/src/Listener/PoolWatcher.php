@@ -9,17 +9,18 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Metric\Listener;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
 use Hyperf\Coordinator\Timer;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Framework\Event\BeforeWorkerStart;
 use Hyperf\Metric\Contract\MetricFactoryInterface;
 use Hyperf\Pool\Pool;
 use Hyperf\Server\Event\MainCoroutineServerStart;
-use Hyperf\Utils\Coroutine;
 use Psr\Container\ContainerInterface;
 
 abstract class PoolWatcher

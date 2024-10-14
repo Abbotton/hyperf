@@ -9,12 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\PgSQL;
 
 use Exception;
 use Generator;
 use Hyperf\Database\Connection;
 use Hyperf\Database\Exception\QueryException;
+use Hyperf\Database\Grammar;
 use Hyperf\Database\PgSQL\Concerns\PostgreSqlSwooleExtManagesTransactions;
 use Hyperf\Database\PgSQL\DBAL\PostgresDriver;
 use Hyperf\Database\PgSQL\Query\Grammars\PostgresSqlSwooleExtGrammar as QueryGrammar;
@@ -27,11 +29,6 @@ use Swoole\Coroutine\PostgreSQLStatement;
 class PostgreSqlSwooleExtConnection extends Connection
 {
     use PostgreSqlSwooleExtManagesTransactions;
-
-    /**
-     * @var PostgreSQL
-     */
-    protected mixed $pdo;
 
     protected int $fetchMode = SW_PGSQL_ASSOC;
 
@@ -57,13 +54,16 @@ class PostgreSqlSwooleExtConnection extends Connection
                 return true;
             }
 
-            $this->getPdo();
-
             $statement = $this->prepare($query);
+
+            $result = $statement->execute($this->prepareBindings($bindings));
+            if ($result === false) {
+                throw new QueryException($query, $bindings, new Exception($statement->error, $statement->errCode));
+            }
 
             $this->recordsHaveBeenModified();
 
-            return $statement->execute($this->prepareBindings($bindings));
+            return true;
         });
     }
 
@@ -76,8 +76,6 @@ class PostgreSqlSwooleExtConnection extends Connection
             if ($this->pretending()) {
                 return 0;
             }
-
-            $this->getPdo();
 
             $statement = $this->prepare($query);
             $this->recordsHaveBeenModified();
@@ -105,14 +103,12 @@ class PostgreSqlSwooleExtConnection extends Connection
                 return [];
             }
 
-            $this->getPdoForSelect($useReadPdo);
-
-            $statement = $this->prepare($query);
+            $statement = $this->prepare($query, $useReadPdo);
 
             $result = $statement->execute($this->prepareBindings($bindings));
 
-            if ($result === false || ! empty($this->pdo->error)) {
-                throw new QueryException($query, [], new Exception($this->pdo->error));
+            if ($result === false || ! empty($statement->error)) {
+                throw new QueryException($query, [], new Exception($statement->error));
             }
 
             return $statement->fetchAll($this->fetchMode) ?: [];
@@ -129,9 +125,7 @@ class PostgreSqlSwooleExtConnection extends Connection
                 return [];
             }
 
-            $this->getPdoForSelect($useReadPdo);
-
-            $statement = $this->prepare($query);
+            $statement = $this->prepare($query, $useReadPdo);
 
             $statement->execute($this->prepareBindings($bindings));
 
@@ -156,13 +150,24 @@ class PostgreSqlSwooleExtConnection extends Connection
 
         $result = $statement->execute($bindings);
         if (! $result) {
-            throw new QueryException($query, [], new Exception($this->pdo->error));
+            throw new QueryException($query, [], new Exception($statement->error));
         }
 
-        return $statement->fetchAll(SW_PGSQL_ASSOC);
+        return $statement->fetchAll();
     }
 
-    public function str_replace_once($needle, $replace, $haystack)
+    /**
+     * @param string $needle
+     * @param string $replace
+     * @param string $haystack
+     * @deprecated ,using `strReplaceOnce` instead
+     */
+    public function str_replace_once($needle, $replace, $haystack): array|string
+    {
+        return $this->strReplaceOnce($needle, $replace, $haystack);
+    }
+
+    public function strReplaceOnce(string $needle, string $replace, string $haystack): array|string
     {
         // Looks for the first occurence of $needle in $haystack
         // and replaces it with $replace.
@@ -192,7 +197,7 @@ class PostgreSqlSwooleExtConnection extends Connection
 
     /**
      * Get the default query grammar instance.
-     * @return \Hyperf\Database\Grammar
+     * @return Grammar
      */
     protected function getDefaultQueryGrammar(): QueryGrammar
     {
@@ -223,16 +228,18 @@ class PostgreSqlSwooleExtConnection extends Connection
         return new PostgresDriver();
     }
 
-    protected function prepare(string $query): PostgreSQLStatement
+    protected function prepare(string $query, bool $useReadPdo = true): PostgreSQLStatement
     {
         $num = 1;
         while (strpos($query, '?')) {
-            $query = $this->str_replace_once('?', '$' . $num++, $query);
+            $query = $this->strReplaceOnce('?', '$' . $num++, $query);
         }
 
-        $statement = $this->pdo->prepare($query);
+        /** @var PostgreSQL $pdo */
+        $pdo = $this->getPdoForSelect($useReadPdo);
+        $statement = $pdo->prepare($query);
         if (! $statement) {
-            throw new QueryException($query, [], new Exception($this->pdo->error));
+            throw new QueryException($query, [], new Exception($pdo->error));
         }
 
         return $statement;

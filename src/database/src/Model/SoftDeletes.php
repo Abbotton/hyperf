@@ -9,9 +9,12 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\Model;
 
 use Psr\EventDispatcher\StoppableEventInterface;
+
+use function Hyperf\Tappable\tap;
 
 /**
  * @method static static|\Hyperf\Database\Model\Builder|\Hyperf\Database\Query\Builder restoreOrCreate(array $attributes = [], array $values = [])

@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\HttpMessage\Upload;
 
 use Hyperf\HttpMessage\Stream\StandardStream;
@@ -17,8 +18,9 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 use SplFileInfo;
+use Stringable;
 
-class UploadedFile extends SplFileInfo implements UploadedFileInterface
+class UploadedFile extends SplFileInfo implements UploadedFileInterface, Stringable
 {
     /**
      * @var int[]
@@ -61,17 +63,11 @@ class UploadedFile extends SplFileInfo implements UploadedFileInterface
         parent::__construct($tmpFile);
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return json_encode($this->toArray());
     }
 
-    /**
-     * TODO: ?string => string.
-     */
     public function getExtension(): string
     {
         $clientName = $this->getClientFilename();
@@ -121,7 +117,7 @@ class UploadedFile extends SplFileInfo implements UploadedFileInterface
      * @throws RuntimeException in cases when no stream is available or can be
      *                          created
      */
-    public function getStream()
+    public function getStream(): StreamInterface
     {
         if ($this->moved) {
             throw new RuntimeException('uploaded file is moved');
@@ -155,7 +151,7 @@ class UploadedFile extends SplFileInfo implements UploadedFileInterface
      * @throws RuntimeException on any error during the move operation, or on
      *                          the second or subsequent call to the method
      */
-    public function moveTo($targetPath)
+    public function moveTo($targetPath): void
     {
         $this->validateActive();
 
@@ -178,9 +174,9 @@ class UploadedFile extends SplFileInfo implements UploadedFileInterface
      * the file in the $_FILES array if available, as PHP calculates this based
      * on the actual size transmitted.
      *
-     * @return false|int the file size in bytes or null if unknown
+     * @return int the file size in bytes or null if unknown
      */
-    public function getSize(): int|false
+    public function getSize(): int
     {
         return $this->size;
     }

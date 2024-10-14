@@ -9,13 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\Connectors;
 
 use Closure;
+use Hyperf\Collection\Arr;
 use Hyperf\Database\Connection;
 use Hyperf\Database\ConnectionInterface;
 use Hyperf\Database\MySqlConnection;
-use Hyperf\Utils\Arr;
 use InvalidArgumentException;
 use PDO;
 use PDOException;
@@ -63,12 +64,10 @@ class ConnectionFactory
             return $this->container->get($key);
         }
 
-        switch ($config['driver']) {
-            case 'mysql':
-                return new MySqlConnector();
-        }
-
-        throw new InvalidArgumentException("Unsupported driver [{$config['driver']}]");
+        return match ($config['driver']) {
+            'mysql' => new MySqlConnector(),
+            default => throw new InvalidArgumentException("Unsupported driver [{$config['driver']}]"),
+        };
     }
 
     /**
@@ -240,7 +239,7 @@ class ConnectionFactory
      * @param Closure|PDO $connection
      * @param string $database
      * @param string $prefix
-     * @return \Hyperf\Database\Connection
+     * @return Connection
      * @throws InvalidArgumentException
      */
     protected function createConnection($driver, $connection, $database, $prefix = '', array $config = [])

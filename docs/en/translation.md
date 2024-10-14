@@ -1,4 +1,5 @@
-# 国际化
+# I18n
+
 Hyperf's internationalization support is very friendly, allowing your project to support multiple languages.
 
 # Install
@@ -131,7 +132,7 @@ If the placeholder is all capital letters, or the first letter is capitalized. T
 
 ```php
 'welcome' => 'Welcome, :NAME', // Welcome, HYPERF
-'goodbye' => 'Goodbye, :Name', // Goodbye, HYPERF
+'goodbye' => 'Goodbye, :Name', // Goodbye, Hyperf
 ```
 
 # Handle complex numbers

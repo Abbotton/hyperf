@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\ViewEngine;
 
 use ArrayAccess;
@@ -17,15 +18,14 @@ use Hyperf\Contract\Arrayable;
 use Hyperf\Contract\MessageBag;
 use Hyperf\Contract\MessageProvider;
 use Hyperf\Macroable\Macroable;
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
 use Hyperf\ViewEngine\Contract\EngineInterface;
 use Hyperf\ViewEngine\Contract\Htmlable;
 use Hyperf\ViewEngine\Contract\Renderable;
 use Hyperf\ViewEngine\Contract\ViewInterface;
-use Stringable;
 use Throwable;
 
-class View implements ArrayAccess, Htmlable, ViewInterface, Stringable
+class View implements ArrayAccess, Htmlable, ViewInterface
 {
     use Macroable {
         __call as macroCall;
@@ -134,7 +134,7 @@ class View implements ArrayAccess, Htmlable, ViewInterface, Stringable
      *
      * @throws Throwable
      */
-    public function render(callable $callback = null): array|string
+    public function render(?callable $callback = null): array|string
     {
         try {
             $contents = $this->renderContents();
@@ -377,10 +377,10 @@ class View implements ArrayAccess, Htmlable, ViewInterface, Stringable
     /**
      * Parse the given errors into an appropriate value.
      */
-    protected function formatErrors(array|MessageProvider|string $provider): \Hyperf\Utils\MessageBag|MessageBag
+    protected function formatErrors(array|MessageProvider|string $provider): \Hyperf\Support\MessageBag|MessageBag
     {
         return $provider instanceof MessageProvider
             ? $provider->getMessageBag()
-            : new \Hyperf\Utils\MessageBag((array) $provider);
+            : new \Hyperf\Support\MessageBag((array) $provider);
     }
 }

@@ -9,13 +9,16 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\RpcClient\Proxy;
 
-use Hyperf\Utils\CodeGen\PhpParser;
+use Hyperf\CodeParser\PhpParser;
 use InvalidArgumentException;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\NodeVisitorAbstract;
+
+use function Hyperf\Support\value;
 
 class ProxyCallVisitor extends NodeVisitorAbstract
 {

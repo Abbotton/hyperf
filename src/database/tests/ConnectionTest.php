@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\Database;
 
 use Hyperf\Database\Connection;
@@ -16,12 +17,16 @@ use Hyperf\Database\Query\Expression;
 use Hyperf\Database\Query\Grammars\MySqlGrammar;
 use Mockery;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
+
+use function Hyperf\Support\build_sql;
 
 /**
  * @internal
  * @coversNothing
  */
+#[CoversNothing]
 class ConnectionTest extends TestCase
 {
     protected function tearDown(): void
@@ -50,5 +55,15 @@ class ConnectionTest extends TestCase
         $sql = $connection->table(new Expression('(select 1 as id) a'))->toSql();
 
         $this->assertSame('select * from (select 1 as id) a', $sql);
+    }
+
+    public function testBuildSql()
+    {
+        $this->assertSame(build_sql('select * from `user`', []), 'select * from `user`');
+        $this->assertSame(build_sql('select * from `user` where `id` = ? and `name` = ? and sex = ? and age = ?', [
+            1, '1', false, true,
+        ]), "select * from `user` where `id` = 1 and `name` = '1' and sex = 0 and age = 1");
+        $this->assertSame(build_sql('select * from `user` where `name` = ? and `sex` = ?', ['?name', 1]), "select * from `user` where `name` = '?name' and `sex` = 1");
+        $this->assertSame(build_sql('select * from `user` where `name` = ? and `sex` = ?', ['?name', 1, 2]), "select * from `user` where `name` = '?name' and `sex` = 1");
     }
 }

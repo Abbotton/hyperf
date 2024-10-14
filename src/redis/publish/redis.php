@@ -9,6 +9,8 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+use function Hyperf\Support\env;
+
 return [
     'default' => [
         'host' => env('REDIS_HOST', 'localhost'),
@@ -39,6 +41,9 @@ return [
             'wait_timeout' => 3.0,
             'heartbeat' => -1,
             'max_idle_time' => (float) env('REDIS_MAX_IDLE_TIME', 60),
+        ],
+        'options' => [
+            'prefix' => env('REDIS_PREFIX', ''),
         ],
     ],
 ];

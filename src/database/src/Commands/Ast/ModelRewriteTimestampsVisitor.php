@@ -9,12 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\Commands\Ast;
 
+use Hyperf\Collection\Collection;
 use Hyperf\Database\Commands\ModelData;
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\Model\Model;
-use Hyperf\Utils\Collection;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\NodeTraverser;
@@ -76,6 +77,8 @@ class ModelRewriteTimestampsVisitor extends AbstractVisitor
                 }
             }
         }
+
+        return null;
     }
 
     protected function rewriteTimestamps(?Node\Stmt\Property $node = null): ?Node\Stmt\Property

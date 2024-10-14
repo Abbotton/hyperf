@@ -9,11 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Swagger\Listener;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Di\Annotation\AnnotationCollector;
 use Hyperf\Di\Annotation\MultipleAnnotation;
+use Hyperf\Engine\Constant\SocketType;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\BootApplication;
 use Hyperf\HttpServer\Annotation\Middleware;
@@ -27,6 +29,8 @@ use Hyperf\Swagger\Util;
 use InvalidArgumentException;
 use OpenApi\Annotations\Operation;
 use Psr\Container\ContainerInterface;
+
+use function Hyperf\Support\value;
 
 class BootSwaggerListener implements ListenerInterface
 {
@@ -59,10 +63,11 @@ class BootSwaggerListener implements ListenerInterface
         }
 
         $servers[] = [
-            'name' => uniqid(),
+            'name' => 'swagger_' . uniqid(),
             'type' => Server::SERVER_HTTP,
             'host' => '0.0.0.0',
             'port' => $port,
+            'sock_type' => SocketType::TCP,
             'callbacks' => [
                 Event::ON_REQUEST => [HttpServer::class, 'onRequest'],
             ],

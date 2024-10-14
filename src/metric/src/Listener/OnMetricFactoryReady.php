@@ -9,12 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Metric\Listener;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
 use Hyperf\Coordinator\Timer;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Engine\Coroutine as Co;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Metric\Contract\MetricFactoryInterface;
@@ -22,8 +24,7 @@ use Hyperf\Metric\CoroutineServerStats;
 use Hyperf\Metric\Event\MetricFactoryReady;
 use Hyperf\Metric\MetricFactoryPicker;
 use Hyperf\Metric\MetricSetter;
-use Hyperf\Utils\Coroutine;
-use Hyperf\Utils\System;
+use Hyperf\Support\System;
 use Psr\Container\ContainerInterface;
 use Swoole\Server as SwooleServer;
 

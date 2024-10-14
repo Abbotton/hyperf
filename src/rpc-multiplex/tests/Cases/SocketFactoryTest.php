@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\RpcMultiplex\Cases;
 
 use Hyperf\Coordinator\Constants;
@@ -18,14 +19,18 @@ use Hyperf\LoadBalancer\Node;
 use Hyperf\LoadBalancer\Random;
 use Hyperf\RpcMultiplex\Socket;
 use Hyperf\RpcMultiplex\SocketFactory;
-use Hyperf\Utils\Reflection\ClassInvoker;
+use Hyperf\Support\Reflection\ClassInvoker;
 use HyperfTest\RpcMultiplex\Stub\ContainerStub;
 use Mockery;
+use PHPUnit\Framework\Attributes\CoversNothing;
+
+use function Hyperf\Coroutine\go;
 
 /**
  * @internal
  * @coversNothing
  */
+#[CoversNothing]
 class SocketFactoryTest extends AbstractTestCase
 {
     public function testSocketConfig()

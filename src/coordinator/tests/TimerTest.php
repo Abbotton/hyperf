@@ -9,18 +9,21 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\Coordinator;
 
 use Closure;
 use Hyperf\Coordinator\CoordinatorManager;
 use Hyperf\Coordinator\Timer;
-use Hyperf\Utils\Waiter;
+use Hyperf\Coroutine\Waiter;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  * @coversNothing
  */
+#[CoversNothing]
 class TimerTest extends TestCase
 {
     public function testAfter()
@@ -111,6 +114,38 @@ class TimerTest extends TestCase
         $timer->clear(999);
 
         $this->assertTrue(true);
+    }
+
+    public function testUntil()
+    {
+        $this->wait(function () {
+            $id = 0;
+            $timer = new Timer();
+            $identifier = uniqid();
+            $timer->until(function () use (&$id) {
+                ++$id;
+            }, $identifier);
+
+            $this->assertSame(0, $id);
+            CoordinatorManager::until($identifier)->resume();
+            $this->assertSame(1, $id);
+        });
+    }
+
+    public function testUntilWhenClear()
+    {
+        $this->wait(function () {
+            $id = 0;
+            $timer = new Timer();
+            $identifier = uniqid();
+            $ret = $timer->until(function () use (&$id) {
+                ++$id;
+            }, $identifier);
+            $timer->clear($ret);
+            $this->assertSame(0, $id);
+            CoordinatorManager::until($identifier)->resume();
+            $this->assertSame(0, $id);
+        });
     }
 
     private function wait(Closure $closure)

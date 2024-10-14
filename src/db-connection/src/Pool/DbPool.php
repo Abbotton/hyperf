@@ -9,16 +9,19 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\DbConnection\Pool;
 
+use Hyperf\Collection\Arr;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\ConnectionInterface;
 use Hyperf\DbConnection\Connection;
 use Hyperf\DbConnection\Frequency;
 use Hyperf\Pool\Pool;
-use Hyperf\Utils\Arr;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+
+use function Hyperf\Support\make;
 
 class DbPool extends Pool
 {

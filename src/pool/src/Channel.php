@@ -9,11 +9,12 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Pool;
 
 use Hyperf\Contract\ConnectionInterface;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Engine\Channel as CoChannel;
-use Hyperf\Utils\Coroutine;
 use SplQueue;
 
 class Channel

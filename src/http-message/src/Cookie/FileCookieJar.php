@@ -9,9 +9,10 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\HttpMessage\Cookie;
 
-use Hyperf\Utils\Codec\Json;
+use Hyperf\Codec\Json;
 use RuntimeException;
 
 /**

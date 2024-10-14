@@ -9,14 +9,18 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Rpc;
 
+use Hyperf\Contract\NormalizerInterface;
 use Hyperf\Contract\PackerInterface;
 use Hyperf\Rpc\Contract\DataFormatterInterface;
 use Hyperf\Rpc\Contract\PathGeneratorInterface;
 use Hyperf\Rpc\Contract\TransporterInterface;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
+
+use function Hyperf\Support\make;
 
 class Protocol
 {
@@ -64,5 +68,14 @@ class Protocol
             throw new InvalidArgumentException("DataFormatter {$dataFormatter} for {$this->name} does not exist");
         }
         return $this->container->get($dataFormatter);
+    }
+
+    public function getNormalizer(): NormalizerInterface
+    {
+        $normalizer = $this->protocolManager->getNormalizer($this->name);
+        if (! $this->container->has($normalizer)) {
+            throw new InvalidArgumentException("Normalizer {$normalizer} for {$this->name} does not exist");
+        }
+        return $this->container->get($normalizer);
     }
 }

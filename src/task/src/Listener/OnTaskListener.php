@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Task\Listener;
 
 use Hyperf\Event\Contract\ListenerInterface;
@@ -18,6 +19,8 @@ use Hyperf\Task\Finish;
 use Hyperf\Task\Task;
 use Psr\Container\ContainerInterface;
 use Throwable;
+
+use function Hyperf\Support\call;
 
 class OnTaskListener implements ListenerInterface
 {

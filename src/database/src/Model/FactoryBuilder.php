@@ -9,12 +9,18 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\Model;
 
 use Closure;
+use Faker\Generator;
 use Faker\Generator as Faker;
+use Hyperf\Collection\Collection;
 use Hyperf\Macroable\Macroable;
 use InvalidArgumentException;
+
+use function Hyperf\Collection\collect;
+use function Hyperf\Tappable\tap;
 
 class FactoryBuilder
 {
@@ -79,7 +85,7 @@ class FactoryBuilder
     /**
      * The Faker instance for the builder.
      *
-     * @var \Faker\Generator
+     * @var Generator
      */
     protected $faker;
 
@@ -241,7 +247,7 @@ class FactoryBuilder
     /**
      * Run after making callbacks on a collection of models.
      *
-     * @param \Hyperf\Utils\Collection $models
+     * @param Collection $models
      */
     public function callAfterMaking($models)
     {
@@ -251,7 +257,7 @@ class FactoryBuilder
     /**
      * Run after creating callbacks on a collection of models.
      *
-     * @param \Hyperf\Utils\Collection $models
+     * @param Collection $models
      */
     public function callAfterCreating($models)
     {
@@ -261,7 +267,7 @@ class FactoryBuilder
     /**
      * Set the connection name on the results and store them.
      *
-     * @param \Hyperf\Utils\Collection $results
+     * @param Collection $results
      */
     protected function store($results)
     {
@@ -299,7 +305,7 @@ class FactoryBuilder
     /**
      * Make an instance of the model with the given attributes.
      *
-     * @return \Hyperf\Database\Model\Model
+     * @return Model
      */
     protected function makeInstance(array $attributes = [])
     {
@@ -390,7 +396,7 @@ class FactoryBuilder
     /**
      * Call after callbacks for each model and state.
      *
-     * @param \Hyperf\Utils\Collection $models
+     * @param Collection $models
      */
     protected function callAfter(array $afterCallbacks, $models)
     {
@@ -406,7 +412,7 @@ class FactoryBuilder
     /**
      * Call after callbacks for each model and state.
      *
-     * @param \Hyperf\Database\Model\Model $model
+     * @param Model $model
      * @param string $state
      */
     protected function callAfterCallbacks(array $afterCallbacks, $model, $state)

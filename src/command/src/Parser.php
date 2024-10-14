@@ -9,9 +9,10 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Command;
 
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
 use InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,7 +44,7 @@ class Parser
      */
     protected static function name(string $expression): string
     {
-        if (! preg_match('/[^\s]+/', $expression, $matches)) {
+        if (! preg_match('/\S+/', $expression, $matches)) {
             throw new InvalidArgumentException('Unable to determine command name from signature.');
         }
 
@@ -60,7 +61,7 @@ class Parser
         $options = [];
 
         foreach ($tokens as $token) {
-            if (preg_match('/-{2,}(.*)/', $token, $matches)) {
+            if (preg_match('/^-{2,}(.*)/', $token, $matches)) {
                 $options[] = static::parseOption($matches[1]);
             } else {
                 $arguments[] = static::parseArgument($token);

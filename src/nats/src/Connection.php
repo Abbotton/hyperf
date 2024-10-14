@@ -9,12 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Nats;
 
 use Closure;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
-use Hyperf\Utils\Coroutine;
+use Hyperf\Coroutine\Coroutine;
 use Throwable;
 
 /**
@@ -290,7 +291,7 @@ class Connection
      * @param string $sid subscription ID
      * @param int $quantity quantity of messages
      */
-    public function unsubscribe(string $sid, int $quantity = null): void
+    public function unsubscribe(string $sid, ?int $quantity = null): void
     {
         $msg = 'UNSUB ' . $sid;
         if ($quantity !== null) {

@@ -9,24 +9,33 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Validation;
 
 use BadMethodCallException;
 use Closure;
+use Hyperf\Collection\Arr;
 use Hyperf\Contract\MessageBag as MessageBagContract;
 use Hyperf\Contract\TranslatorInterface;
 use Hyperf\Contract\ValidatorInterface as ValidatorContract;
 use Hyperf\HttpMessage\Upload\UploadedFile;
-use Hyperf\Utils\Arr;
-use Hyperf\Utils\Fluent;
-use Hyperf\Utils\MessageBag;
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
+use Hyperf\Stringable\StrCache;
+use Hyperf\Support\Fluent;
+use Hyperf\Support\MessageBag;
+use Hyperf\Validation\Contract\DataAwareRule;
 use Hyperf\Validation\Contract\ImplicitRule;
 use Hyperf\Validation\Contract\PresenceVerifierInterface;
 use Hyperf\Validation\Contract\Rule as RuleContract;
+use Hyperf\Validation\Contract\ValidatorAwareRule;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Stringable;
+
+use function Hyperf\Collection\collect;
+use function Hyperf\Collection\data_get;
+use function Hyperf\Support\make;
+use function Hyperf\Tappable\tap;
 
 class Validator implements ValidatorContract
 {
@@ -128,6 +137,7 @@ class Validator implements ValidatorContract
         'RequiredWith', 'RequiredWithAll', 'RequiredWithout', 'RequiredWithoutAll',
         'RequiredIf', 'RequiredUnless', 'Confirmed', 'Same', 'Different', 'Unique',
         'Before', 'After', 'BeforeOrEqual', 'AfterOrEqual', 'Gt', 'Lt', 'Gte', 'Lte',
+        'Prohibits',
     ];
 
     /**
@@ -138,7 +148,7 @@ class Validator implements ValidatorContract
     /**
      * The numeric related validation rules.
      */
-    protected array $numericRules = ['Numeric', 'Integer'];
+    protected array $numericRules = ['Numeric', 'Integer', 'Decimal'];
 
     /**
      * @param TranslatorInterface $translator the Translator implementation
@@ -167,7 +177,7 @@ class Validator implements ValidatorContract
      */
     public function __call($method, $parameters)
     {
-        $rule = Str::snake(substr($method, 8));
+        $rule = StrCache::snake(substr($method, 8));
 
         if (isset($this->extensions[$rule])) {
             return $this->callExtension($rule, $parameters);
@@ -262,7 +272,7 @@ class Validator implements ValidatorContract
     /**
      * Run the validator's rules against its data.
      *
-     * @throws \Hyperf\Validation\ValidationException if validate fails
+     * @throws ValidationException if validate fails
      */
     public function validate(): array
     {
@@ -276,7 +286,7 @@ class Validator implements ValidatorContract
     /**
      * Get the attributes and values that were validated.
      *
-     * @throws \Hyperf\Validation\ValidationException if invalid
+     * @throws ValidationException if invalid
      */
     public function validated(): array
     {
@@ -493,7 +503,7 @@ class Validator implements ValidatorContract
     public function addExtensions(array $extensions)
     {
         if ($extensions) {
-            $keys = array_map('\Hyperf\Utils\Str::snake', array_keys($extensions));
+            $keys = array_map('\Hyperf\Stringable\StrCache::snake', array_keys($extensions));
 
             $extensions = array_combine($keys, array_values($extensions));
         }
@@ -509,7 +519,7 @@ class Validator implements ValidatorContract
         $this->addExtensions($extensions);
 
         foreach ($extensions as $rule => $extension) {
-            $this->implicitRules[] = Str::studly($rule);
+            $this->implicitRules[] = StrCache::studly($rule);
         }
     }
 
@@ -521,7 +531,7 @@ class Validator implements ValidatorContract
         $this->addExtensions($extensions);
 
         foreach ($extensions as $rule => $extension) {
-            $this->dependentRules[] = Str::studly($rule);
+            $this->dependentRules[] = StrCache::studly($rule);
         }
     }
 
@@ -530,7 +540,7 @@ class Validator implements ValidatorContract
      */
     public function addExtension(string $rule, Closure|string $extension)
     {
-        $this->extensions[Str::snake($rule)] = $extension;
+        $this->extensions[StrCache::snake($rule)] = $extension;
     }
 
     /**
@@ -540,7 +550,7 @@ class Validator implements ValidatorContract
     {
         $this->addExtension($rule, $extension);
 
-        $this->implicitRules[] = Str::studly($rule);
+        $this->implicitRules[] = StrCache::studly($rule);
     }
 
     /**
@@ -550,7 +560,7 @@ class Validator implements ValidatorContract
     {
         $this->addExtension($rule, $extension);
 
-        $this->dependentRules[] = Str::studly($rule);
+        $this->dependentRules[] = StrCache::studly($rule);
     }
 
     /**
@@ -559,7 +569,7 @@ class Validator implements ValidatorContract
     public function addReplacers(array $replacers)
     {
         if ($replacers) {
-            $keys = array_map('\Hyperf\Utils\Str::snake', array_keys($replacers));
+            $keys = array_map('\Hyperf\Stringable\StrCache::snake', array_keys($replacers));
 
             $replacers = array_combine($keys, array_values($replacers));
         }
@@ -572,7 +582,7 @@ class Validator implements ValidatorContract
      */
     public function addReplacer(string $rule, Closure|string $replacer)
     {
-        $this->replacers[Str::snake($rule)] = $replacer;
+        $this->replacers[StrCache::snake($rule)] = $replacer;
     }
 
     /**
@@ -636,7 +646,7 @@ class Validator implements ValidatorContract
     /**
      * Get the Presence Verifier implementation.
      *
-     *@throws RuntimeException
+     * @throws RuntimeException
      */
     public function getPresenceVerifier(): PresenceVerifierInterface
     {
@@ -689,6 +699,25 @@ class Validator implements ValidatorContract
     public function setContainer(ContainerInterface $container)
     {
         $this->container = $container;
+    }
+
+    /**
+     * Get the value of a given attribute.
+     */
+    public function getValue(string $attribute)
+    {
+        return Arr::get($this->data, $attribute);
+    }
+
+    /**
+     * Set the value of a given attribute.
+     *
+     * @param string $attribute
+     * @param mixed $value
+     */
+    public function setValue($attribute, $value)
+    {
+        Arr::set($this->data, $attribute, $value);
     }
 
     /**
@@ -883,6 +912,14 @@ class Validator implements ValidatorContract
      */
     protected function validateUsingCustomRule(string $attribute, $value, RuleContract $rule)
     {
+        if ($rule instanceof ValidatorAwareRule) {
+            $rule->setValidator($this);
+        }
+
+        if ($rule instanceof DataAwareRule) {
+            $rule->setData($this->data);
+        }
+
         if (! $rule->passes($attribute, $value)) {
             $this->failedRules[$attribute][$rule::class] = [];
 
@@ -950,14 +987,6 @@ class Validator implements ValidatorContract
             }
         }
         return null;
-    }
-
-    /**
-     * Get the value of a given attribute.
-     */
-    protected function getValue(string $attribute)
-    {
-        return Arr::get($this->data, $attribute);
     }
 
     /**

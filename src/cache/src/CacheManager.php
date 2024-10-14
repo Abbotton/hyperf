@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Cache;
 
 use Hyperf\Cache\Driver\DriverInterface;
@@ -16,6 +17,8 @@ use Hyperf\Cache\Driver\RedisDriver;
 use Hyperf\Cache\Exception\InvalidArgumentException;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\StdoutLoggerInterface;
+
+use function Hyperf\Support\make;
 
 class CacheManager
 {

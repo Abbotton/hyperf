@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\Logger;
 
 use Hyperf\Contract\StdoutLoggerInterface;
@@ -16,14 +17,18 @@ use Hyperf\Logger\Logger;
 use Mockery;
 use Monolog\Handler\TestHandler;
 use Monolog\LogRecord;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
+use function Hyperf\Coroutine\parallel;
+
 /**
  * @internal
- * @covers \Hyperf\Logger\Logger
+ * @coversNothing
  */
+#[CoversClass(Logger::class)]
 class LoggerTest extends TestCase
 {
     public function testInstanceOfMonoLogger()
@@ -55,7 +60,7 @@ class LoggerTest extends TestCase
     public function testLoggingLoopDetection()
     {
         $logger = new Logger('test', [
-            $handler = new class() extends TestHandler {
+            $handler = new class extends TestHandler {
                 protected function write(array|LogRecord $record): void
                 {
                     usleep(1);

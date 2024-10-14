@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Guzzle\RingPHP;
 
 use Exception;
@@ -17,7 +18,6 @@ use GuzzleHttp\Ring\Exception\RingException;
 use GuzzleHttp\Ring\Future\CompletedFutureArray;
 use Hyperf\Engine\Http\Client;
 use Hyperf\Engine\Http\RawResponse;
-use Hyperf\Utils\ResourceGenerator;
 use Throwable;
 
 /**

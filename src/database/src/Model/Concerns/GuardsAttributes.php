@@ -9,9 +9,10 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\Model\Concerns;
 
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
 
 trait GuardsAttributes
 {

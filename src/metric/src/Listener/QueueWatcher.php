@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Metric\Listener;
 
 use Hyperf\AsyncQueue\Driver\DriverFactory;
@@ -16,9 +17,9 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
 use Hyperf\Coordinator\Timer;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Metric\Event\MetricFactoryReady;
-use Hyperf\Utils\Coroutine;
 use Psr\Container\ContainerInterface;
 
 /**

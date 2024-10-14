@@ -9,20 +9,23 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\ServiceGovernanceNacos;
 
+use Hyperf\Codec\Json;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Nacos\Exception\RequestException;
 use Hyperf\ServiceGovernance\DriverInterface;
-use Hyperf\Utils\Codec\Json;
-use Hyperf\Utils\Coroutine;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
+
+use function Hyperf\Support\retry;
 
 class NacosDriver implements DriverInterface
 {
@@ -45,6 +48,11 @@ class NacosDriver implements DriverInterface
         $this->client = $container->get(Client::class);
         $this->logger = $container->get(StdoutLoggerInterface::class);
         $this->config = $container->get(ConfigInterface::class);
+    }
+
+    public function isLongPolling(): bool
+    {
+        return false;
     }
 
     public function getNodes(string $uri, string $name, array $metadata): array
@@ -103,7 +111,9 @@ class NacosDriver implements DriverInterface
         }
 
         $this->serviceRegistered[$name] = true;
-        $this->registerHeartbeat($name, $host, $port);
+        if ($ephemeral) {
+            $this->registerHeartbeat($name, $host, $port);
+        }
     }
 
     public function isRegistered(string $name, string $host, int $port, array $metadata): bool
@@ -122,7 +132,7 @@ class NacosDriver implements DriverInterface
             return false;
         }
 
-        if ($response->getStatusCode() === 500 && strpos((string) $response->getBody(), 'not found') > 0) {
+        if (in_array($response->getStatusCode(), [400, 500], true) && strpos((string) $response->getBody(), 'not found') > 0) {
             return false;
         }
 
@@ -145,7 +155,10 @@ class NacosDriver implements DriverInterface
             throw new RequestException(sprintf('Failed to get nacos instance %s:%d for %s!', $host, $port, $name));
         }
         $this->serviceRegistered[$name] = true;
-        $this->registerHeartbeat($name, $host, $port);
+
+        if ($this->config->get('services.drivers.nacos.ephemeral')) {
+            $this->registerHeartbeat($name, $host, $port);
+        }
 
         return true;
     }

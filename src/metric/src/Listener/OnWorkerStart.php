@@ -9,20 +9,22 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Metric\Listener;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Coordinator\Constants;
 use Hyperf\Coordinator\CoordinatorManager;
 use Hyperf\Coordinator\Timer;
+use Hyperf\Coroutine\Coroutine;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Framework\Event\BeforeWorkerStart;
 use Hyperf\Metric\Contract\MetricFactoryInterface;
 use Hyperf\Metric\Event\MetricFactoryReady;
 use Hyperf\Metric\MetricSetter;
-use Hyperf\Utils\Coroutine;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Swoole\Server;
 
 use function gc_status;
 use function getrusage;
@@ -124,7 +126,7 @@ class OnWorkerStart implements ListenerInterface
 
         $timerInterval = $this->config->get('metric.default_metric_interval', 5);
         $timerId = $this->timer->tick($timerInterval, function () use ($metrics) {
-            $server = $this->container->get(\Swoole\Server::class);
+            $server = $this->container->get(Server::class);
             $serverStats = $server->stats();
             $this->trySet('gc_', $metrics, gc_status());
             $this->trySet('', $metrics, getrusage());

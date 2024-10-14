@@ -9,11 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace HyperfTest\Cache\Stub;
 
 use Hyperf\Cache\CacheManager;
 use Hyperf\Cache\Driver\RedisDriver;
+use Hyperf\Codec\Packer\PhpSerializerPacker;
 use Hyperf\Config\Config;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Di\Container;
@@ -26,9 +29,8 @@ use Hyperf\Redis\Pool\RedisPool;
 use Hyperf\Redis\Redis;
 use Hyperf\Redis\RedisFactory;
 use Hyperf\Redis\RedisProxy;
-use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Packer\PhpSerializerPacker;
 use Mockery;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 class ContainerStub
 {
@@ -41,6 +43,7 @@ class ContainerStub
                     'driver' => RedisDriver::class,
                     'packer' => PhpSerializerPacker::class,
                     'prefix' => 'c:',
+                    'skip_cache_results' => [],
                 ],
                 'serialize' => [
                     'driver' => SerializeRedisDriver::class,
@@ -88,6 +91,9 @@ class ContainerStub
                 ],
             ],
         ]);
+
+        $container->shouldReceive('has')->with(StdoutLoggerInterface::class)->andReturnFalse();
+        $container->shouldReceive('has')->with(EventDispatcherInterface::class)->andReturnFalse();
 
         $logger = Mockery::mock(StdoutLoggerInterface::class);
         $logger->shouldReceive(Mockery::any())->andReturn(null);

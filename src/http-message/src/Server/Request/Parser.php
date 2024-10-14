@@ -9,10 +9,13 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\HttpMessage\Server\Request;
 
 use Hyperf\HttpMessage\Server\RequestParserInterface;
 use InvalidArgumentException;
+
+use function Hyperf\Support\make;
 
 class Parser implements RequestParserInterface
 {

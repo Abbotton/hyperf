@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Kafka;
 
 use longlang\phpkafka\Consumer\ConsumeMessage;
@@ -22,7 +23,7 @@ abstract class AbstractConsumer
     /**
      * @var string|string[]
      */
-    public string|array $topic = [];
+    public array|string $topic = [];
 
     public ?string $groupId = null;
 
@@ -100,6 +101,11 @@ abstract class AbstractConsumer
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    public function isEnable(bool $enable): bool
+    {
+        return $enable;
     }
 
     /**

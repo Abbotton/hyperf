@@ -9,11 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\Database\PgSQL\Concerns;
 
 use Closure;
 use Exception;
 use Throwable;
+
+use function Hyperf\Tappable\tap;
 
 trait PostgreSqlSwooleExtManagesTransactions
 {
@@ -196,7 +199,7 @@ trait PostgreSqlSwooleExtManagesTransactions
         if ($this->causedByLostConnection($e)) {
             $this->reconnect();
 
-            $this->pdo->query('BEGIN');
+            $this->getPdo()->query('BEGIN');
         } else {
             throw $e;
         }
